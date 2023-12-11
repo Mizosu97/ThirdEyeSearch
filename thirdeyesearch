@@ -74,7 +74,13 @@ local function extractDBtoPageFormat()
 			["pages"] = {}
 		}
 		local fileContents = dofile(file[2])
+		local inputPage = 1
 		for i = 1, i <= #fileContents, i = i + 1 do
+			if (i - 1) % 10 == 0 then
+				inputPage = inputPage + 1
+				PAGEDATABASE.categories[PAGEDATABASE.categoryCount].pageCount = PAGEDATABASE.categories[PAGEDATABASE.categoryCount].pageCount + 1
+			end
+
 		end
 	end
 end
