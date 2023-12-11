@@ -1,0 +1,88 @@
+#!/bin/lua
+
+local xml2lua = dofile("libs/xml2lua.lua")
+local handler = dofile("libs/tree.lua")
+
+local function x(cmd)
+	os.execute(cmd)
+end
+
+local function getWidth()
+	local temp = io.popen("tput cols")
+	local width = temp:read("*n")
+	temp:close()
+	return width
+end
+
+local dbFiles = {            
+	["Footholds"] = {1, "../footholds.lua"},        
+	["Files Containing Usernames"] = {1, "../db/core/filescontainingusernames.lua"},   
+	["Sensitive Directories"] = {1, "../db/core/sensitivedirectories.lua"},        
+	["Web Server Detection"] = {1, "../db/core/webserverdetection.lua"},   
+	["Vulnerable Files"] = {1, "../db/core/vulnerablefiles.lua"},         
+	["Vulnerable Servers"] = {1, "../db/core/vulnerableservers.lua"},    
+	["Error Messages"] = {1, "../db/core/errormessages.lua"},             
+	["Files Containing Juicy Info"] = {1, "../db/core/filescontainingjuicyinfo.lua"},    
+	["Files Containing Passwords"] = {1, "../db/core/filescontainingpasswords.lua"}, 
+	["Sensitive Online Shopping Info"] = {1, "../db/core/sensitiveonlineshoppinginfo.lua"},    
+	["Network or Vulnerability Data"] = {1, "../db/core/networkorvulnerabilitydata.lua"},    
+	["Pages Containing Login Portals"] = {1, "../db/core/pagescontainingloginportals.lua"},  
+	["Various Online Devices"] = {1, "../db/core/variousonlinedevices.lua"},       
+	["Advisories and Vulnerabilities"] = {1, "../db/core/advisoriesandvulnerabilities.lua"}    
+}
+
+local function updateDB()
+	x("cd $HOME && wget https://gitlab.com/exploit-database/exploitdb/-/raw/main/ghdb.xml?ref_type=heads -O db.xml")
+	x("rm $HOME/db/core/*")
+	local xmlDBFile = io.open("../db.xml", "r")
+	local xmlDB = xmlDBFile:read("*all")
+	xmlDBFile:close()
+	xml2lua.parser(handler):parse(xmlDB)
+	local entries = handler.root.ghdb.entry
+	for _,file in pairs(dbFiles) do
+		x("touch " .. file[2] .. " && echo \"return {\\n\" > " .. file[2])
+		
+	end
+	for _,entry in pairs(entries) do
+		local typeFile = io.open(dbFiles[entry.category][2], "a")
+		typeFile:write("[" .. dbFiles[entry.category][1] .. "] = {\n")
+		for listing, value in pairs(entry) do
+			if type(value) ~= "table" then
+				typeFile:write("[\"" .. listing .. "\"] = [[" .. value .. "]],")
+			end
+		end
+		typeFile:write("\n }")
+		typeFile:close()
+		dbFiles[entry.category][1] = dbFiles[entry.category][1] + 1
+	end
+	for _,file in pairs(dbFiles) do
+		x("echo \"}\" >> " .. file[2])
+	end
+end
+
+PAGEDATABASE = {
+	["categoryCount"] = 0,
+	["categories"] = {}
+}
+
+local function extractDBtoPageFormat()
+	for title, file in pairs(dbFiles) do
+		PAGEDATABASE.categoryCount = PAGEDATABASE.categoryCount + 1
+		PAGEDATABASE.categories[PAGEDATABASE.categoryCount] = {
+			["pageCount"] = 0,
+			["entryCount"] = 0,
+			["pages"] = {}
+		}
+		local fileContents = dofile(file[2])
+		for i = 1, i <= #fileContents, i = i + 1 do
+		end
+	end
+end
+
+
+local function setPage(dataTable)
+	local pageCount = 1
+	local entryCount = 1
+	for _,entry in pairs(dataTable) do
+	end
+end
