@@ -3,16 +3,13 @@
 local xml2lua = dofile("libs/xml2lua.lua")
 local handler = dofile("libs/tree.lua")
 
-local function x(cmd)
-	os.execute(cmd)
-end
+local x = os.execute
 
-local function getWidth()
-	local temp = io.popen("tput cols")
-	local width = temp:read("*n")
-	temp:close()
-	return width
-end
+
+
+
+
+--[=[ DATABASE UPDATING AND LOADING ]=]--
 
 local dbFiles = {            
 	["Footholds"] = {1, "../db/core/footholds.lua"},        
@@ -78,7 +75,7 @@ local function updateDB()
 	end
 end
 
-local PAGEDATABASE = {
+PAGEDATABASE = {
 	["categoryCount"] = 0,
 	["categories"] = {}
 }
@@ -115,6 +112,21 @@ local function extractDBtoPageFormat()
 end
 
 
+
+
+
+--[=[ USER INTERFACE ]=]--
+
+WIDTH = 0
+local function setWidth()
+	local temp = io.popen("tput cols")
+	WIDTH = temp:read("*n")
+	if WIDTH % 2 ~= 0 then
+		WIDTH = WIDTH - 1
+	end
+	temp:close()
+end
+
 local function getNumRange(page)
 	local num
 	for key, val in pairs(page) do
@@ -127,7 +139,6 @@ local function getNumRange(page)
 		return math.floor(num / 10) * 10
 	end
 end
-
 
 local function orderVisualPage(page)
 	local new = {}
@@ -144,12 +155,28 @@ local function orderVisualPage(page)
 	return new
 end
 
-local function setPage(dataTable)
-	local pageCount = 1
-	local entryCount = 1
-	for _,entry in pairs(dataTable) do
+
+
+local function title()
+	setWidth()
+	local p = ""
+	local lines = ""
+
+	for i = 1, (WIDTH - 52) / 2 do
+		p = p .. " "
 	end
+
+	for i = 1, WIDTH - 2 do
+		lines = lines .. ""
+	end
+
+	local logo = "" ..
+"╔" .. lines ..                                                 "╗\n" ..
+"║" ..p.. "      _____ _     _         _ _____                " ..p.. "║\n" ..
+"║" ..p.. "     |_   _| |__ (_)_ __ __| | ____|   _  ___      " ..p.. "║\n" ..
+"║" ..p.. "       | | | '_ \| | '__/ _` |  _|| | | |/ _ \     " ..p.. "║\n" ..
+"║" ..p.. "       | | | | | | | | | (_| | |__| |_| |  __/     " ..p.. "║\n" ..
+"║" ..p.. "       |_| |_| |_|_|_|  \__,_|_____\__, |\___|     " ..p.. "║\n" ..
+"║" ..p.. "                                   |___/Search     " ..p.. "║\n" ..
+"╠" .. lines ..                                                 "╣\n"
 end
-
-
-
