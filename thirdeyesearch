@@ -15,7 +15,7 @@ local function getWidth()
 end
 
 local dbFiles = {            
-	["Footholds"] = {1, "../footholds.lua"},        
+	["Footholds"] = {1, "../db/core/footholds.lua"},        
 	["Files Containing Usernames"] = {1, "../db/core/filescontainingusernames.lua"},   
 	["Sensitive Directories"] = {1, "../db/core/sensitivedirectories.lua"},        
 	["Web Server Detection"] = {1, "../db/core/webserverdetection.lua"},   
@@ -45,22 +45,40 @@ local function updateDB()
 	end
 	for _,entry in pairs(entries) do
 		local typeFile = io.open(dbFiles[entry.category][2], "a")
-		typeFile:write("[" .. dbFiles[entry.category][1] .. "] = {\n")
+		typeFile:write("\n\n[" .. dbFiles[entry.category][1] .. "] = {")
 		for listing, value in pairs(entry) do
 			if type(value) ~= "table" then
-				typeFile:write("[\"" .. listing .. "\"] = [[" .. value .. "]],")
+				-- Wipe carriage returns
+				local stringValue = tostring(value)
+				local cleanedValue = ""
+				local i = 1
+				while i <= #stringValue do
+					local c = string.sub(stringValue, i, i)
+					local d = ""
+					if c == "\r" then
+						d = "\n"
+					elseif c == "]" and i == #stringValue then
+						d = "] "
+					else
+						d = c
+					end
+					cleanedValue = cleanedValue .. d
+					i = i + 1
+				end
+
+				typeFile:write("\n        [\"" .. listing .. "\"] = [[" .. cleanedValue .. "]],")
 			end
 		end
-		typeFile:write("\n }")
+		typeFile:write("\n},")
 		typeFile:close()
 		dbFiles[entry.category][1] = dbFiles[entry.category][1] + 1
 	end
 	for _,file in pairs(dbFiles) do
-		x("echo \"}\" >> " .. file[2])
+		x("echo \"\n\n}\" >> " .. file[2])
 	end
 end
 
-PAGEDATABASE = {
+local PAGEDATABASE = {
 	["categoryCount"] = 0,
 	["categories"] = {}
 }
@@ -68,23 +86,63 @@ PAGEDATABASE = {
 local function extractDBtoPageFormat()
 	for title, file in pairs(dbFiles) do
 		PAGEDATABASE.categoryCount = PAGEDATABASE.categoryCount + 1
-		PAGEDATABASE.categories[PAGEDATABASE.categoryCount] = {
-			["pageCount"] = 0,
-			["entryCount"] = 0,
-			["pages"] = {}
+		local currentCategory = PAGEDATABASE.categoryCount
+		PAGEDATABASE.categories[currentCategory] = {
+			["name"] = title,
+			["pageCount"] = 1,
+			["entryCount"] = 1,
+			["pages"] = {
+				[1] = {}
+			}
 		}
 		local fileContents = dofile(file[2])
-		local inputPage = 1
-		for i = 1, i <= #fileContents, i = i + 1 do
-			if (i - 1) % 10 == 0 then
-				inputPage = inputPage + 1
-				PAGEDATABASE.categories[PAGEDATABASE.categoryCount].pageCount = PAGEDATABASE.categories[PAGEDATABASE.categoryCount].pageCount + 1
+		local i = 1
+		local currentPage = 1
+		local lastPageEntryCount = 1
+		while i <= #fileContents do
+			if lastPageEntryCount == 11 then
+				PAGEDATABASE.categories[currentCategory].pageCount = PAGEDATABASE.categories[currentCategory].pageCount + 1
+				currentPage = PAGEDATABASE.categories[currentCategory].pageCount
+				table.insert(PAGEDATABASE.categories[currentCategory].pages, currentPage, {})
+				lastPageEntryCount = 1
 			end
-
+			PAGEDATABASE.categories[currentCategory].pages[currentPage][tostring(i)] = fileContents[i]
+			PAGEDATABASE.categories[currentCategory].entryCount = PAGEDATABASE.categories[currentCategory].entryCount + 1
+			lastPageEntryCount = lastPageEntryCount + 1
+			i = i + 1
 		end
 	end
 end
 
+
+local function getNumRange(page)
+	local num
+	for key, val in pairs(page) do
+		num = tonumber(key)
+		break
+	end
+	if num % 10 == 0 then
+		return num - 10
+	else
+		return math.floor(num / 10) * 10
+	end
+end
+
+
+local function orderVisualPage(page)
+	local new = {}
+	local range = getNumRange(page)
+	local i = 1
+	while i <= 10 do
+		table.insert(new,
+		{
+			["number"] = tostring(range + i),
+			["data"] = page[tostring(range + i)]
+		})
+		i = i + 1
+	end
+	return new
+end
 
 local function setPage(dataTable)
 	local pageCount = 1
@@ -92,3 +150,6 @@ local function setPage(dataTable)
 	for _,entry in pairs(dataTable) do
 	end
 end
+
+
+
