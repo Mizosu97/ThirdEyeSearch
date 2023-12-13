@@ -45,7 +45,7 @@ local function updateDB()
 	xml2lua.parser(handler):parse(xmlDB)
 	local entries = handler.root.ghdb.entry
 	for _,file in pairs(dbFiles) do
-		x("touch " .. file[2] .. " && echo \"return {\\n\" > " .. file[2])
+		x("touch " .. file[2] .. " && echo \"return {\n\" > " .. file[2])
 		
 	end
 	for _,entry in pairs(entries) do
@@ -225,10 +225,6 @@ local function loading(text)
 	io.write("║  " .. text .. "... " .. p .. "║\n╚" .. line() .. "╝\n")
 end
 
-local function killLoading()
-	isLoading = false
-end
-
 
 local function getStringPadding(num)
 	local p = ""
@@ -246,7 +242,8 @@ local function displayPage(pageID)
 	setWidth()
 	local orderedPage = orderVisualPage(PAGEDATABASE.categories[CURRENTCATEGORY].pages[pageID])
 	io.write("║" .. line():gsub("═", " ") .. "║\n")
-	io.write("║ " .. PAGEDATABASE.categories[CURRENTCATEGORY].name .. getStringPadding(#PAGEDATABASE.categories[CURRENTCATEGORY].name + 4) .. " ║")
+	io.write("║ " .. PAGEDATABASE.categories[CURRENTCATEGORY].name .. getStringPadding(#PAGEDATABASE.categories[CURRENTCATEGORY].name + 4) .. " ║\n")
+	io.write("║ Page " .. tostring(pageID) .. " of " .. tostring(PAGEDATABASE.categories[CURRENTCATEGORY].pageCount) .. getStringPadding(#tostring(pageID) + #tostring(PAGEDATABASE.categories[CURRENTCATEGORY].pageCount) + 12) .. "║\n")
 	io.write("║" .. line():gsub("═", " ") .. "║\n")
 	for _,entry in ipairs(orderedPage) do
 		local maxQueryWidth = WIDTH - 5 - #entry.number
@@ -266,7 +263,14 @@ local function displayPage(pageID)
 
 end
 
-loading("loas")
-extractDBtoPageFormat()
-title()
-displayPage(1)
+
+
+local function main()
+	loading("ThirdEyeSearch is loading")
+	updateDB()
+	extractDBtoPageFormat()
+	title()
+	displayPage(2)
+end
+
+main()
