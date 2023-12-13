@@ -5,6 +5,14 @@ local handler = dofile("libs/tree.lua")
 
 local x = os.execute
 
+local function sleep(time)
+	x("sleep " .. time)
+end
+
+local function clear()
+	x("clear")
+end
+
 
 
 
@@ -117,6 +125,14 @@ end
 
 --[=[ USER INTERFACE ]=]--
 
+local function raw()
+	x("stty raw -echo")
+end
+
+local function sane()
+	x("stty sane")
+end
+
 WIDTH = 0
 local function setWidth()
 	local temp = io.popen("tput cols")
@@ -170,7 +186,9 @@ local function line()
 	end
 	return lines
 end
+
 local function title()
+	clear()
 	setWidth()
 	local p = ""
 
@@ -193,4 +211,62 @@ local function title()
 	io.write(logo)
 end
 
+local function loading(text)
+	setWidth()
+
+	local p = ""
+	local ct = 1
+	while ct <= (WIDTH  - #text - 8)  do
+		p = p .. " "
+		ct = ct + 1
+	end
+
+	title()
+	io.write("║  " .. text .. "... " .. p .. "║\n╚" .. line() .. "╝\n")
+end
+
+local function killLoading()
+	isLoading = false
+end
+
+
+local function getStringPadding(num)
+	local p = ""
+	local i = 1
+	while i <= WIDTH - num do
+		p = p .. " "
+		i = i + 1
+	end
+	return p
+end
+
+local CURRENTCATEGORY = 1
+
+local function displayPage(pageID)
+	setWidth()
+	local orderedPage = orderVisualPage(PAGEDATABASE.categories[CURRENTCATEGORY].pages[pageID])
+	io.write("║" .. line():gsub("═", " ") .. "║\n")
+	io.write("║ " .. PAGEDATABASE.categories[CURRENTCATEGORY].name .. getStringPadding(#PAGEDATABASE.categories[CURRENTCATEGORY].name + 4) .. " ║")
+	io.write("║" .. line():gsub("═", " ") .. "║\n")
+	for _,entry in ipairs(orderedPage) do
+		local maxQueryWidth = WIDTH - 5 - #entry.number
+		local queryToDisplay = ""
+		if #entry.data.query > maxQueryWidth then
+			local i = 1
+			while i <= maxQueryWidth do
+				queryToDisplay = queryToDisplay .. string.sub(entry.data.query, i, i)
+				i = i + 1
+			end
+		else
+			queryToDisplay = entry.data.query .. getStringPadding(#entry.data.query + 7)
+
+		end
+		io.write("║ " .. entry.number .. " " .. queryToDisplay .. " ║\n")
+	end
+
+end
+
+loading("loas")
+extractDBtoPageFormat()
 title()
+displayPage(1)
