@@ -450,6 +450,14 @@ local function typeCharToCmd(c)
 end
 
 
+-- Search query with w3m
+local function search(query)
+	local formattedQuery = "<<EOF\nhttps://www.google.com/search?q=" .. string.gsub(query, "s", "+" .. "\nEOF")
+	x("w3m " .. formattedQuery)
+
+end
+
+
 -- Run the command stored in COMMANDINPUT
 local function runCommand()
 	local cargs = splitString(COMMANDINPUT)
@@ -467,6 +475,8 @@ local function runCommand()
 		commandBar("")
 		CURRENTCATEGORY = 0
 		CURRENTPAGE = 0
+	elseif cargs[1] == "search" and CURRENTCATEGORY ~= 0 then
+		search(PAGEDATABASE.categories[CURRENTCATEGORY].pages[CURRENTPAGE][cargs[2]].query)
 	end
 end
 
