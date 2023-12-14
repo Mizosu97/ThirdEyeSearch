@@ -19,6 +19,8 @@ end
 
 --[=[ DATABASE UPDATING AND LOADING ]=]--
 
+
+-- All core database file locations
 local dbFiles = {            
 	["Footholds"] = {1, "../db/core/footholds.lua"},        
 	["Files Containing Usernames"] = {1, "../db/core/filescontainingusernames.lua"},   
@@ -36,6 +38,8 @@ local dbFiles = {
 	["Advisories and Vulnerabilities"] = {1, "../db/core/advisoriesandvulnerabilities.lua"}    
 }
 
+
+-- Download the newest database from exploit.db and install it.
 local function updateDB()
 	x("cd $HOME && wget https://gitlab.com/exploit-database/exploitdb/-/raw/main/ghdb.xml?ref_type=heads -O db.xml")
 	x("rm $HOME/db/core/*")
@@ -79,15 +83,19 @@ local function updateDB()
 		dbFiles[entry.category][1] = dbFiles[entry.category][1] + 1
 	end
 	for _,file in pairs(dbFiles) do
-		x("echo \"\n\n}\" >> " .. file[2])
+		x("echo \"\n}\" >> " .. file[2])
 	end
 end
 
+
+-- Stores all pages for the TUI
 PAGEDATABASE = {
 	["categoryCount"] = 0,
 	["categories"] = {}
 }
 
+
+-- Format installed database into the page format for the TUI
 local function extractDBtoPageFormat()
 	for title, file in pairs(dbFiles) do
 		PAGEDATABASE.categoryCount = PAGEDATABASE.categoryCount + 1
@@ -123,17 +131,26 @@ end
 
 
 
---[=[ USER INTERFACE ]=]--
+--[=[ THE ACTUAL TUI STUFF ]=]--
 
+
+-- Set terminal to raw mode
 local function raw()
 	x("stty raw -echo")
 end
 
+
+-- Revert terminal to normal
 local function sane()
 	x("stty sane")
 end
 
+
+-- Current width of the terminal
 WIDTH = 0
+
+
+-- Set WIDTH to the current terminal width
 local function setWidth()
 	local temp = io.popen("tput cols")
 	WIDTH = temp:read("*n")
@@ -147,7 +164,11 @@ local function setWidth()
 	end
 end
 
-local function getNumRange(page)
+
+-- Get the "range" of a page
+-- For example, the page displaying entries 21 to 30
+-- would have a range of 20. 31 to 40 would be 30, so on.
+local function getNumRange(page	)
 	local num
 	for key, val in pairs(page) do
 		num = tonumber(key)
@@ -160,6 +181,13 @@ local function getNumRange(page)
 	end
 end
 
+
+-- Orders the entries of a page by number
+-- Because the entry keys are numbers represented by
+-- strings, pairs() wont parse through it in order.
+-- This creates a new table, preserving the entry
+-- number data and allowing it to be parsed in order
+-- with ipairs().
 local function orderVisualPage(page)
 	local new = {}
 	local range = getNumRange(page)
@@ -176,7 +204,8 @@ local function orderVisualPage(page)
 end
 
 
-
+-- Write a basic horizontal line to the screen
+-- Does not contain the outer TUI border
 local function line()
 	local lines = ""
 	local i = 1
@@ -187,6 +216,8 @@ local function line()
 	return lines
 end
 
+
+-- Write the title of the TUI to the screen
 local function title()
 	clear()
 	setWidth()
@@ -211,6 +242,8 @@ local function title()
 	io.write(logo)
 end
 
+
+-- Show the loading screen
 local function loading(text)
 	setWidth()
 
@@ -226,6 +259,8 @@ local function loading(text)
 end
 
 
+-- This is kinda hard to explain, but has to do with
+-- how much space to add after a string in the TUI
 local function getStringPadding(num)
 	local p = ""
 	local i = 1
@@ -236,8 +271,13 @@ local function getStringPadding(num)
 	return p
 end
 
-local CURRENTCATEGORY = 1
 
+-- The currently open category and page
+local CURRENTCATEGORY = 1
+local CURRENTPAGE = 1
+
+
+-- Display a page on the screen by ID
 local function displayPage(pageID)
 	setWidth()
 	local orderedPage = orderVisualPage(PAGEDATABASE.categories[CURRENTCATEGORY].pages[pageID])
@@ -261,13 +301,56 @@ local function displayPage(pageID)
 		io.write("║ " .. entry.number .. " " .. queryToDisplay .. " ║\n")
 	end
 
+	io.write("║" .. line():gsub("═", " ") .. "║\n")
+	local rightArrow = "  "
+	if pageID < PAGEDATABASE.categories[CURRENTCATEGORY].pageCount then
+		rightArrow = ">>"
+	end
+	local leftArrow = "  "
+	if pageID > 1 then
+		leftArrow = "<<"
+	end
+	io.write("║ " .. leftArrow .. getStringPadding(8) .. rightArrow .. " ║\n")
+	io.write("╠" .. line() .. "╣\n")
+	CURRENTPAGE = pageID
 end
 
+
+-- Go to the left or right page
+local function turnPage(dir)
+	local nextPage = 0
+	if dir == "right" then
+		if CURRENTPAGE == PAGEDATABASE.categories[CURRENTCATEGORY].pageCount then
+			nextPage = 1
+		else
+			nextPage = CURRENTPAGE + 1
+		end
+	elseif dir == "left" then
+		if CURRENTPAGE == 1 then
+			nextPage = PAGEDATABASE.categories[CURRENTCATEGORY].pageCount
+		end
+	end
+	displayPage(nextPage)
+end
+
+
+-- Category page
+local function categoryPage()
+	setwidth()
+	io.write("║" .. line():gsub("═", " ") .. "║\n")
+	io.write("║ Categories:" .. getStringPadding(15) .. " ║\n")
+	io.write("║" .. line():gsub("═", " ") .. "║\n")
+	for number, category in ipairs(PAGEDATABASE.categories) do
+
+	end
+end
+-- Command bar
+local function commandBar()
+end
 
 
 local function main()
 	loading("ThirdEyeSearch is loading")
-	updateDB()
 	extractDBtoPageFormat()
 	title()
 	displayPage(2)
