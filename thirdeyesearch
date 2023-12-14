@@ -13,6 +13,18 @@ local function clear()
 	x("clear")
 end
 
+local function splitString(str, splitChar)
+        local resultSplit = {}
+        if splitChar == nil then
+                splitChar = " "
+        end
+        if str and splitChar then
+                for part in string.gmatch(str, "([^"..splitChar.."]+)") do
+                        table.insert(resultSplit, part)
+                end
+        end
+        return resultSplit
+end
 
 
 
@@ -221,6 +233,12 @@ end
 local function title()
 	clear()
 	setWidth()
+	if WIDTH < 54 then
+		clear()
+		print("Please make your terminal width wider than 54.")
+		print("Current width: " .. WIDTH)
+		os.exit()
+	end
 	local p = ""
 
 	local i = 1
@@ -288,6 +306,9 @@ local function displayPage(pageID)
 	for _,entry in ipairs(orderedPage) do
 		local maxQueryWidth = WIDTH - 5 - #entry.number
 		local queryToDisplay = ""
+		if entry.data == nil then
+			goto skip -- Skip this current iteration
+		end
 		if #entry.data.query > maxQueryWidth then
 			local i = 1
 			while i <= maxQueryWidth do
@@ -295,10 +316,11 @@ local function displayPage(pageID)
 				i = i + 1
 			end
 		else
-			queryToDisplay = entry.data.query .. getStringPadding(#entry.data.query + 7)
+			queryToDisplay = entry.data.query .. getStringPadding(#entry.data.query + 5 + #entry.number)
 
 		end
 		io.write("║ " .. entry.number .. " " .. queryToDisplay .. " ║\n")
+		::skip:: -- Skip (see above comment)
 	end
 
 	io.write("║" .. line():gsub("═", " ") .. "║\n")
@@ -316,7 +338,7 @@ local function displayPage(pageID)
 end
 
 
--- Go to the left or right page
+-- Go to the next left or right page
 local function turnPage(dir)
 	local nextPage = 0
 	if dir == "right" then
@@ -328,6 +350,8 @@ local function turnPage(dir)
 	elseif dir == "left" then
 		if CURRENTPAGE == 1 then
 			nextPage = PAGEDATABASE.categories[CURRENTCATEGORY].pageCount
+		else
+			nextPage = CURRENTPAGE - 1
 		end
 	end
 	displayPage(nextPage)
@@ -336,24 +360,157 @@ end
 
 -- Category page
 local function categoryPage()
-	setwidth()
+	setWidth()
+	CURRENTPAGE = 0
+	CURRENTCATEGORY = 0
 	io.write("║" .. line():gsub("═", " ") .. "║\n")
 	io.write("║ Categories:" .. getStringPadding(15) .. " ║\n")
 	io.write("║" .. line():gsub("═", " ") .. "║\n")
 	for number, category in ipairs(PAGEDATABASE.categories) do
+		io.write("║ " .. tostring(number) .. " " .. category.name .. getStringPadding(#category.name + #tostring(number) + 5) .. " ║\n")
+	end
+	io.write("║" .. line():gsub("═", " ") .. "║\n")
+	io.write("╠" .. line() .."╣\n")
+end
 
+
+-- Command bar
+COMMANDINPUT = ""
+local function commandBar(input)
+	if (#COMMANDINPUT + #input) > (WIDTH - 22) then
+		return
+	end
+	io.write("║ [ThirdEyeSearch]> " .. COMMANDINPUT .. input .. getStringPadding(#COMMANDINPUT + #input + 22) .. " ║\n")
+	io.write("╚" .. line() .. "╝")
+	COMMANDINPUT = COMMANDINPUT .. input
+end
+
+
+
+
+
+--[=[ FUNCTIONALITY ]=]--
+
+
+-- Arrow keys
+local arrows = {
+    ["\27[D"] = "left",
+    ["\27[C"] = "right"
+}
+
+
+-- Other pressable special keys
+local other = {
+	["\13"] = "enter",
+	["\8"] = "back",
+	["\127"] = "back"
+}
+
+
+-- Get a single key press in real time
+local function getKeyPress()
+	raw()
+	while true do
+		local c = io.read(1)
+		if c:match("[a-zA-Z0-9]") ~= nil or c == " "then
+			sane()
+			return {
+				["ctype"] = "char",
+				["value"] = c
+			}
+		elseif other[c] then
+			sane()
+			return {
+				["ctype"] = "other",
+				["value"] = other[c]
+			}
+		else
+			c = c .. io.read(2)
+			sane()
+			if arrows[c] then
+				return {
+					["ctype"] = "arrow",
+					["value"] = arrows[c]
+				}
+			end
+		end
 	end
 end
--- Command bar
-local function commandBar()
+
+
+-- Throw a character at the command bar
+-- This really exists only for backspace checking
+local function typeCharToCmd(c)
+	if c ~= "back" then
+		commandBar(c)
+	elseif #COMMANDINPUT >= 1 then
+		COMMANDINPUT = string.sub(COMMANDINPUT, 1, #COMMANDINPUT - 1)
+		commandBar("")
+	end
 end
 
 
+-- Run the command stored in COMMANDINPUT
+local function runCommand()
+	local cargs = splitString(COMMANDINPUT)
+	COMMANDINPUT = ""
+	if cargs[1] == "open" and CURRENTCATEGORY == 0 then
+		if cargs[2] and PAGEDATABASE.categories[tonumber(cargs[2])] then
+			CURRENTCATEGORY = tonumber(cargs[2])
+			title()
+			displayPage(1)
+			commandBar("")
+		end
+	elseif cargs[1] == "close" and CURRENTCATEGORY ~= 0 then
+		title()
+		categoryPage()
+		commandBar("")
+		CURRENTCATEGORY = 0
+		CURRENTPAGE = 0
+	end
+end
+
+
+
+
+
+--[=[ MAIN ]=]--
 local function main()
 	loading("ThirdEyeSearch is loading")
 	extractDBtoPageFormat()
+	setWidth()
 	title()
-	displayPage(2)
-end
+	categoryPage()
+	commandBar("")
 
+	while true do
+		local key = getKeyPress()
+
+		if key.ctype == "char" then
+			title()
+			if CURRENTCATEGORY == 0 then
+				categoryPage()
+			else
+				displayPage(CURRENTPAGE)
+			end
+			typeCharToCmd(key.value)
+		elseif key.ctype == "arrow" then
+			title()
+			turnPage(key.value)
+			commandBar("")
+		elseif key.ctype == "other" then
+			if key.value == "back" then
+				title()
+				if CURRENTCATEGORY == 0 then
+                                	categoryPage()
+                        	else
+                                	displayPage(CURRENTPAGE)
+				end
+				typeCharToCmd("back")
+			elseif key.value == "enter" then
+				runCommand()
+			end
+		end
+	end
+end
 main()
