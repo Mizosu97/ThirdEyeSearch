@@ -12,6 +12,8 @@ mkdir /etc/ThirdEyeSearch/
 
 cp -r Libraries /usr/local/ThirdEyeSearch/
 
+chmod -R 777 /usr/local/ThirdEyeSearch
+
 cp config.lua /etc/ThirdEyeSearch
 
 chmod +x thirdeyesearch
