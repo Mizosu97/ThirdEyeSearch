@@ -6,6 +6,8 @@ if [ "$EUID" -ne 0 ]; then
 fi
 
 mkdir /usr/local/ThirdEyeSearch
+mkdir /usr/local/ThirdEyeSearch/DB
+mkdir /usr/local/ThirdEyeSearch/DB/Core
 mkdir /etc/ThirdEyeSearch/
 
 cp -r Libraries /usr/local/ThirdEyeSearch/

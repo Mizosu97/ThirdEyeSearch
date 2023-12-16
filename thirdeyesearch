@@ -74,28 +74,28 @@ local promptTextColor = hexToAnsiEscape(config.colors["Prompt Text"])
 
 -- All core database file locations
 local dbFiles = {            
-	["Footholds"] = {1, "../db/core/footholds.lua"},
-	["Files Containing Usernames"] = {1, "../db/core/filescontainingusernames.lua"},
-	["Sensitive Directories"] = {1, "../db/core/sensitivedirectories.lua"},
-	["Web Server Detection"] = {1, "../db/core/webserverdetection.lua"},
-	["Vulnerable Files"] = {1, "../db/core/vulnerablefiles.lua"},  
-	["Vulnerable Servers"] = {1, "../db/core/vulnerableservers.lua"},
-	["Error Messages"] = {1, "../db/core/errormessages.lua"},
-	["Files Containing Juicy Info"] = {1, "../db/core/filescontainingjuicyinfo.lua"},
-	["Files Containing Passwords"] = {1, "../db/core/filescontainingpasswords.lua"},
-	["Sensitive Online Shopping Info"] = {1, "../db/core/sensitiveonlineshoppinginfo.lua"},
-	["Network or Vulnerability Data"] = {1, "../db/core/networkorvulnerabilitydata.lua"},
-	["Pages Containing Login Portals"] = {1, "../db/core/pagescontainingloginportals.lua"},
-	["Various Online Devices"] = {1, "../db/core/variousonlinedevices.lua"},
-	["Advisories and Vulnerabilities"] = {1, "../db/core/advisoriesandvulnerabilities.lua"}
+	["Footholds"] = {1, "/usr/local/ThirdEyeSearch/DB/Core/footholds.lua"},
+	["Files Containing Usernames"] = {1, "/usr/local/ThirdEyeSearch/DB/Core/filescontainingusernames.lua"},
+	["Sensitive Directories"] = {1, "/usr/local/ThirdEyeSearch/DB/Core/sensitivedirectories.lua"},
+	["Web Server Detection"] = {1, "/usr/local/ThirdEyeSearch/DB/Core/webserverdetection.lua"},
+	["Vulnerable Files"] = {1, "/usr/local/ThirdEyeSearch/DB/Core/vulnerablefiles.lua"},  
+	["Vulnerable Servers"] = {1, "/usr/local/ThirdEyeSearch/DB/Core/vulnerableservers.lua"},
+	["Error Messages"] = {1, "/usr/local/ThirdEyeSearch/DB/Core/errormessages.lua"},
+	["Files Containing Juicy Info"] = {1, "/usr/local/ThirdEyeSearch/DB/Core/filescontainingjuicyinfo.lua"},
+	["Files Containing Passwords"] = {1, "/usr/local/ThirdEyeSearch/DB/Core/filescontainingpasswords.lua"},
+	["Sensitive Online Shopping Info"] = {1, "/usr/local/ThirdEyeSearch/DB/Core/sensitiveonlineshoppinginfo.lua"},
+	["Network or Vulnerability Data"] = {1, "/usr/local/ThirdEyeSearch/DB/Core/networkorvulnerabilitydata.lua"},
+	["Pages Containing Login Portals"] = {1, "/usr/local/ThirdEyeSearch/DB/Core/pagescontainingloginportals.lua"},
+	["Various Online Devices"] = {1, "/usr/local/ThirdEyeSearch/DB/Core/variousonlinedevices.lua"},
+	["Advisories and Vulnerabilities"] = {1, "/usr/local/ThirdEyeSearch/DB/Core/advisoriesandvulnerabilities.lua"}
 }
 
 
 -- Download the newest database from exploit.db and install it.
 local function updateDB()
-	x("cd $HOME && wget https://gitlab.com/exploit-database/exploitdb/-/raw/main/ghdb.xml?ref_type=heads -O db.xml")
-	x("rm $HOME/db/core/*")
-	local xmlDBFile = io.open("../db.xml", "r")
+	x("cd /usr/local/ThirdEyeSearch/DB/Core/ && wget https://gitlab.com/exploit-database/exploitdb/-/raw/main/ghdb.xml?ref_type=heads -O db.xml")
+	x("rm /usr/local/ThirdEyeSearch/DB/Core/*")
+	local xmlDBFile = io.open("/usr/local/ThirdEyeSearch/DB/db.xml", "r")
 	local xmlDB = xmlDBFile:read("*all")
 	xmlDBFile:close()
 	xml2lua.parser(handler):parse(xmlDB)
@@ -265,7 +265,7 @@ local function line()
 		lines = lines .. "═"
 		i = i + 1
 	end
-	return borderColor .. lines .. defaultColor
+	return borderColor .. lines
 end
 
 
