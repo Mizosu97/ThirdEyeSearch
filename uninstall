@@ -1,14 +1,11 @@
 #!/bin/bash
 
 if [ "$EUID" -ne 0 ]; then
-    echo "To install ThirdEyeSearch, this script must be ran as the root user."
+    echo "To uninstall ThirdEyeSearch, this script must be ran as the root user."
     exit 1
 fi
 
-mkdir /usr/local/ThirdEyeSearch
-mkdir /etc/ThirdEyeSearch/
+rm -rf /usr/local/ThirdEyeSearch
+rm -rf /etc/ThirdEyeSearch/
 
-cp -r Libraries /usr/local/ThirdEyeSearch/
-
-chmod +x thirdeyesearch
-cp thirdeyesearch /usr/bin/
+rm  /usr/bin/thirdeyesearch
