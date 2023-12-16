@@ -1,7 +1,15 @@
 #!/bin/lua
 
-local xml2lua = dofile("libs/xml2lua.lua")
-local handler = dofile("libs/tree.lua")
+--[=[ LIBRARIES ]=]--
+local xml2lua = dofile("/usr/local/ThirdEyeSearch/Libraries/xml2lua.lua")
+local handler = dofile("/usr/local/ThirdEyeSearch/Libraries/tree.lua")
+local config = dofile("/etc/ThirdEyeSearch/config.lua")
+
+
+
+
+
+--[=[ GENERAL FUNCTIONS AND STUFF ]=]--
 
 local x = os.execute
 
@@ -13,6 +21,7 @@ local function clear()
 	x("clear")
 end
 
+-- Split a string. Taken from mizOS (https://entertheduat.org)
 local function splitString(str, splitChar)
         local resultSplit = {}
         if splitChar == nil then
@@ -29,25 +38,56 @@ end
 
 
 
+
+--[=[ CONFIGURATION ]=]--
+
+local function hexToAnsiEscape(hexCode)
+    local hexCode = hexCode:gsub("#", "")
+    local r = tonumber(hexCode:sub(1, 2), 16)
+    local g = tonumber(hexCode:sub(3, 4), 16)
+    local b = tonumber(hexCode:sub(5, 6), 16)
+    local ansiEscape = string.format("\x1b[38;2;%d;%d;%dm", r, g, b)
+    return ansiEscape
+end
+
+local defaultColor = hexToAnsiEscape(config.colors["Default"])
+local logoColor = hexToAnsiEscape(config.colors["Logo"])
+local logoSubtextColor = hexToAnsiEscape(config.colors["Logo Subtext"])
+local borderColor = hexToAnsiEscape(config.colors["Border"])
+local pageTitleColor = hexToAnsiEscape(config.colors["Page Title"])
+local pageCounterColor = hexToAnsiEscape(config.colors["Page Counter"])
+local arrowsColor = hexToAnsiEscape(config.colors["Arrows"])
+local entryNumberColor = hexToAnsiEscape(config.colors["Entry Number"])
+local entryTextColor = hexToAnsiEscape(config.colors["Entry Text"])
+local terminalPromptTextColor = hexToAnsiEscape(config.colors["Terminal Prompt Text"])
+local terminalDecorationsColor = hexToAnsiEscape(config.colors["Terminal Decorations"])
+local terminalArrowColor = hexToAnsiEscape(config.colors["Terminal Arrow"])
+local inputTextColor = hexToAnsiEscape(config.colors["Input Text"])
+local promptTextColor = hexToAnsiEscape(config.colors["Prompt Text"])
+
+
+
+
+
 --[=[ DATABASE UPDATING AND LOADING ]=]--
 
 
 -- All core database file locations
 local dbFiles = {            
-	["Footholds"] = {1, "../db/core/footholds.lua"},        
-	["Files Containing Usernames"] = {1, "../db/core/filescontainingusernames.lua"},   
-	["Sensitive Directories"] = {1, "../db/core/sensitivedirectories.lua"},        
-	["Web Server Detection"] = {1, "../db/core/webserverdetection.lua"},   
-	["Vulnerable Files"] = {1, "../db/core/vulnerablefiles.lua"},         
-	["Vulnerable Servers"] = {1, "../db/core/vulnerableservers.lua"},    
-	["Error Messages"] = {1, "../db/core/errormessages.lua"},             
-	["Files Containing Juicy Info"] = {1, "../db/core/filescontainingjuicyinfo.lua"},    
-	["Files Containing Passwords"] = {1, "../db/core/filescontainingpasswords.lua"}, 
-	["Sensitive Online Shopping Info"] = {1, "../db/core/sensitiveonlineshoppinginfo.lua"},    
-	["Network or Vulnerability Data"] = {1, "../db/core/networkorvulnerabilitydata.lua"},    
-	["Pages Containing Login Portals"] = {1, "../db/core/pagescontainingloginportals.lua"},  
-	["Various Online Devices"] = {1, "../db/core/variousonlinedevices.lua"},       
-	["Advisories and Vulnerabilities"] = {1, "../db/core/advisoriesandvulnerabilities.lua"}    
+	["Footholds"] = {1, "../db/core/footholds.lua"},
+	["Files Containing Usernames"] = {1, "../db/core/filescontainingusernames.lua"},
+	["Sensitive Directories"] = {1, "../db/core/sensitivedirectories.lua"},
+	["Web Server Detection"] = {1, "../db/core/webserverdetection.lua"},
+	["Vulnerable Files"] = {1, "../db/core/vulnerablefiles.lua"},  
+	["Vulnerable Servers"] = {1, "../db/core/vulnerableservers.lua"},
+	["Error Messages"] = {1, "../db/core/errormessages.lua"},
+	["Files Containing Juicy Info"] = {1, "../db/core/filescontainingjuicyinfo.lua"},
+	["Files Containing Passwords"] = {1, "../db/core/filescontainingpasswords.lua"},
+	["Sensitive Online Shopping Info"] = {1, "../db/core/sensitiveonlineshoppinginfo.lua"},
+	["Network or Vulnerability Data"] = {1, "../db/core/networkorvulnerabilitydata.lua"},
+	["Pages Containing Login Portals"] = {1, "../db/core/pagescontainingloginportals.lua"},
+	["Various Online Devices"] = {1, "../db/core/variousonlinedevices.lua"},
+	["Advisories and Vulnerabilities"] = {1, "../db/core/advisoriesandvulnerabilities.lua"}
 }
 
 
@@ -225,7 +265,7 @@ local function line()
 		lines = lines .. "═"
 		i = i + 1
 	end
-	return lines
+	return borderColor .. lines .. defaultColor
 end
 
 
@@ -248,14 +288,14 @@ local function title()
 	end
 
 	local logo = "" ..
-"╔" .. line() ..                                                          "╗\n" ..
-"║" ..p.. "      _____ _     _         _  _____                " ..p..    "║\n" ..
-"║" ..p.. "     |_   _| |__ (_)_ __ __| || ____|   _  ___      " ..p..    "║\n" ..
-"║" ..p.. "       | | | '_ \\| | '__/ _` ||  _|| | | |/ _ \\     " ..p..  "║\n" ..
-"║" ..p.. "       | | | | | | | | | (_| || |__| |_| |  __/     " ..p..    "║\n" ..
-"║" ..p.. "       |_| |_| |_|_|_|  \\__,_||_____\\__, |\\___|     " ..p.. "║\n" ..
-"║" ..p.. "                                    |___/Search     " ..p..    "║\n" ..
-"╠" .. line() ..                                                          "╣\n"
+borderColor .. "╔" .. line() ..                                                          "╗\n" ..
+"║" ..p.. logoColor .. "      _____ _     _         _  _____                " ..p..    borderColor .. "║\n" ..
+"║" ..p.. logoColor .. "     |_   _| |__ (_)_ __ __| || ____|   _  ___      " ..p..    borderColor .. "║\n" ..
+"║" ..p.. logoColor .. "       | | | '_ \\| | '__/ _` ||  _|| | | |/ _ \\     " ..p..  borderColor .. "║\n" ..
+"║" ..p.. logoColor .. "       | | | | | | | | | (_| || |__| |_| |  __/     " ..p..    borderColor .. "║\n" ..
+"║" ..p.. logoColor .. "       |_| |_| |_|_|_|  \\__,_||_____\\__, |\\___|     " ..p.. borderColor .. "║\n" ..
+"║" ..p.. logoColor .. "                                    |___/" .. logoSubtextColor .. "Search     " ..p..    borderColor .. "║\n" ..
+"╠" .. line() ..                                                          "╣\n" .. defaultColor
 
 	io.write(logo)
 end
@@ -273,7 +313,7 @@ local function loading(text)
 	end
 
 	title()
-	io.write("║  " .. text .. "... " .. p .. "║\n╚" .. line() .. "╝\n")
+	io.write(borderColor .. "║  " .. pageTitleColor .. text .. "... " .. p .. borderColor .. "║\n╚" .. line() .. "╝\n" .. defaultColor)
 end
 
 
@@ -299,10 +339,10 @@ local CURRENTPAGE = 1
 local function displayPage(pageID)
 	setWidth()
 	local orderedPage = orderVisualPage(PAGEDATABASE.categories[CURRENTCATEGORY].pages[pageID])
-	io.write("║" .. line():gsub("═", " ") .. "║\n")
-	io.write("║ " .. PAGEDATABASE.categories[CURRENTCATEGORY].name .. getStringPadding(#PAGEDATABASE.categories[CURRENTCATEGORY].name + 4) .. " ║\n")
-	io.write("║ Page " .. tostring(pageID) .. " of " .. tostring(PAGEDATABASE.categories[CURRENTCATEGORY].pageCount) .. getStringPadding(#tostring(pageID) + #tostring(PAGEDATABASE.categories[CURRENTCATEGORY].pageCount) + 12) .. "║\n")
-	io.write("║" .. line():gsub("═", " ") .. "║\n")
+	io.write(borderColor .. "║" .. line():gsub("═", " ") .. "║\n")
+	io.write("║ " .. pageTitleColor .. PAGEDATABASE.categories[CURRENTCATEGORY].name .. getStringPadding(#PAGEDATABASE.categories[CURRENTCATEGORY].name + 4) .. borderColor .. " ║\n")
+	io.write("║ " .. pageCounterColor .. "Page " .. tostring(pageID) .. " of " .. tostring(PAGEDATABASE.categories[CURRENTCATEGORY].pageCount) .. getStringPadding(#tostring(pageID) + #tostring(PAGEDATABASE.categories[CURRENTCATEGORY].pageCount) + 12) .. borderColor .. "║\n")
+	io.write("║" .. line():gsub("═", " ") .. "║\n" .. defaultColor)
 	for _,entry in ipairs(orderedPage) do
 		local maxQueryWidth = WIDTH - 5 - #entry.number
 		local queryToDisplay = ""
@@ -319,11 +359,11 @@ local function displayPage(pageID)
 			queryToDisplay = entry.data.query .. getStringPadding(#entry.data.query + 5 + #entry.number)
 
 		end
-		io.write("║ " .. entry.number .. " " .. queryToDisplay .. " ║\n")
+		io.write(borderColor .. "║ " .. entryNumberColor .. entry.number .. " " .. entryTextColor .. queryToDisplay .. borderColor .. " ║\n" .. defaultColor)
 		::skip:: -- Skip (see above comment)
 	end
 
-	io.write("║" .. line():gsub("═", " ") .. "║\n")
+	io.write(borderColor .. "║" .. line():gsub("═", " ") .. "║\n" .. defaultColor)
 	local rightArrow = "  "
 	if pageID < PAGEDATABASE.categories[CURRENTCATEGORY].pageCount then
 		rightArrow = ">>"
@@ -332,8 +372,8 @@ local function displayPage(pageID)
 	if pageID > 1 then
 		leftArrow = "<<"
 	end
-	io.write("║ " .. leftArrow .. getStringPadding(8) .. rightArrow .. " ║\n")
-	io.write("╠" .. line() .. "╣\n")
+	io.write(borderColor .. "║ " .. arrowsColor .. leftArrow .. getStringPadding(8) .. rightArrow .. borderColor .. " ║\n" .. defaultColor)
+	io.write(borderColor .. "╠" .. line() .. "╣\n" .. defaultColor)
 	CURRENTPAGE = pageID
 end
 
@@ -363,14 +403,14 @@ local function categoryPage()
 	setWidth()
 	CURRENTPAGE = 0
 	CURRENTCATEGORY = 0
-	io.write("║" .. line():gsub("═", " ") .. "║\n")
-	io.write("║ Categories:" .. getStringPadding(15) .. " ║\n")
-	io.write("║" .. line():gsub("═", " ") .. "║\n")
+	io.write(borderColor .. "║" .. line():gsub("═", " ") .. "║\n")
+	io.write("║ " .. pageTitleColor .. "Categories:" .. getStringPadding(15) .. borderColor .. " ║\n")
+	io.write("║" .. line():gsub("═", " ") .. "║\n" .. defaultColor)
 	for number, category in ipairs(PAGEDATABASE.categories) do
-		io.write("║ " .. tostring(number) .. " " .. category.name .. getStringPadding(#category.name + #tostring(number) + 5) .. " ║\n")
+		io.write(borderColor .. "║ " .. entryNumberColor .. tostring(number) .. " " .. entryTextColor .. category.name .. getStringPadding(#category.name + #tostring(number) + 5) .. borderColor .. " ║\n" .. defaultColor)
 	end
-	io.write("║" .. line():gsub("═", " ") .. "║\n")
-	io.write("╠" .. line() .."╣\n")
+	io.write(borderColor .. "║" .. line():gsub("═", " ") .. "║\n")
+	io.write("╠" .. line() .."╣\n" .. defaultColor)
 end
 
 
@@ -380,8 +420,8 @@ local function commandBar(input)
 	if (#COMMANDINPUT + #input) > (WIDTH - 22) then
 		return
 	end
-	io.write("║ [ThirdEyeSearch]> " .. COMMANDINPUT .. input .. getStringPadding(#COMMANDINPUT + #input + 22) .. " ║\n")
-	io.write("╚" .. line() .. "╝")
+	io.write(borderColor .. "║ " .. terminalDecorationsColor .. "[" .. terminalPromptTextColor .. "ThirdEyeSearch" .. terminalDecorationsColor .. "]" .. terminalArrowColor .. "> " .. inputTextColor .. COMMANDINPUT .. input .. getStringPadding(#COMMANDINPUT + #input + 22) .. borderColor .. " ║\n" .. defaultColor)
+	io.write(borderColor .. "╚" .. line() .. "╝\n" .. defaultColor)
 	COMMANDINPUT = COMMANDINPUT .. input
 end
 
@@ -450,11 +490,52 @@ local function typeCharToCmd(c)
 end
 
 
+-- Convert a string query into a google search link
+
+local encodingTable = {
+    [":"] = "%3A",
+    ["/"] = "%2F",
+    ["?"] = "%3F",
+    ["="] = "%3D",
+    ["&"] = "%26",
+    ["#"] = "%23",
+    ["["] = "%5B",
+    ["]"] = "%5D",
+    ["@"] = "%40",
+    ["!"] = "%21",
+    ["$"] = "%24",
+    ["'"] = "%27",
+    ["("] = "%28",
+    [")"] = "%29",
+    ["*"] = "%2A",
+    ["+"] = "%2B",
+    [","] = "%2C",
+    [";"] = "%3B",
+    [" "] = "+",
+}
+
+local function stringToLink(str)
+	local base = "https://www.google.com/search?q="
+	local formattedQuery = ""
+	local i = 1
+	while i <= #str do
+		local c = string.sub(str, i, i)
+		if encodingTable[i] ~= nil then
+			formattedQuery = formattedQuery .. encodingTable[i]
+		else
+			formattedQuery = formattedQuery .. c
+		end
+		i = i + 1
+	end
+
+	return base .. formattedQuery
+end
+
+
 -- Search query with w3m
 local function search(query)
-	local formattedQuery = "<<EOF\nhttps://www.google.com/search?q=" .. string.gsub(query, "s", "+" .. "\nEOF")
+	local formattedQuery = "\"" .. query:gsub("\"", "\\\"") .. " -dorks -ghdb -exploit.db\""
 	x("w3m " .. formattedQuery)
-
 end
 
 
@@ -476,7 +557,13 @@ local function runCommand()
 		CURRENTCATEGORY = 0
 		CURRENTPAGE = 0
 	elseif cargs[1] == "search" and CURRENTCATEGORY ~= 0 then
-		search(PAGEDATABASE.categories[CURRENTCATEGORY].pages[CURRENTPAGE][cargs[2]].query)
+		if cargs[2] ~= "custom" then
+			search(PAGEDATABASE.categories[CURRENTCATEGORY].pages[CURRENTPAGE][cargs[2]].querystring)
+		else
+			io.write(promptTextColor .. "Please input your query: " .. inputTextColor)
+			search(stringToLink(io.read()))
+			io.write(defaultColor)
+		end
 	end
 end
 

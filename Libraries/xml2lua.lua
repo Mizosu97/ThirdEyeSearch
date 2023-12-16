@@ -50,7 +50,7 @@
 --@author Paul Chakravarti (paulc@passtheaardvark.com)
 --@author Manoel Campos da Silva Filho
 local xml2lua = { _VERSION = "1.6-1" }
-local XmlParser = dofile("libs/XmlParser.lua")
+local XmlParser = dofile("/usr/local/ThirdEyeSearch/Libraries/XmlParser.lua")
 
 ---Recursivelly prints a table in an easy-to-ready format
 --@param tb The table to be printed
