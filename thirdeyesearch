@@ -542,6 +542,7 @@ end
 -- Run the command stored in COMMANDINPUT
 local function runCommand()
 	local cargs = splitString(COMMANDINPUT)
+	local errorMessage = inputTextColor .. "Invalid command: " .. COMMANDINPUT .. defaultColor
 	COMMANDINPUT = ""
 	if cargs[1] == "open" and CURRENTCATEGORY == 0 then
 		if cargs[2] and PAGEDATABASE.categories[tonumber(cargs[2])] then
@@ -564,6 +565,18 @@ local function runCommand()
 			search(stringToLink(io.read()))
 			io.write(defaultColor)
 		end
+	elseif cargs[1] == "quit" then
+		clear()
+		os.exit()
+	else
+		title()
+		if CURRENTCATEGORY == 0 then
+			categoryPage()
+		else
+			displayPage(CURRENTPAGE)
+		end
+		commandBar("")
+		io.write(errorMessage)
 	end
 end
 
@@ -572,6 +585,7 @@ end
 
 
 --[=[ MAIN ]=]--
+local firstStart = 1
 local function main()
 	loading("ThirdEyeSearch is loading")
 	updateDB()
@@ -593,9 +607,12 @@ local function main()
 			end
 			typeCharToCmd(key.value)
 		elseif key.ctype == "arrow" then
-			title()
-			turnPage(key.value)
-			commandBar("")
+			if CURRENTCATEGORY ~= 0 and firstStart ~= 1 then
+				title()
+				turnPage(key.value)
+				commandBar("")
+				firstStart = 69420
+			end	
 		elseif key.ctype == "other" then
 			if key.value == "back" then
 				title()
