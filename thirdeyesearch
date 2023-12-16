@@ -93,7 +93,7 @@ local dbFiles = {
 
 -- Download the newest database from exploit.db and install it.
 local function updateDB()
-	x("cd /usr/local/ThirdEyeSearch/DB/Core/ && wget https://gitlab.com/exploit-database/exploitdb/-/raw/main/ghdb.xml?ref_type=heads -O db.xml")
+	x("cd /usr/local/ThirdEyeSearch/DB && wget https://gitlab.com/exploit-database/exploitdb/-/raw/main/ghdb.xml?ref_type=heads -O db.xml")
 	x("rm /usr/local/ThirdEyeSearch/DB/Core/*")
 	local xmlDBFile = io.open("/usr/local/ThirdEyeSearch/DB/db.xml", "r")
 	local xmlDB = xmlDBFile:read("*all")
