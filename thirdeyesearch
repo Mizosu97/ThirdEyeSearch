@@ -589,7 +589,9 @@ end
 --[=[ MAIN ]=]--
 local function main()
 	loading("ThirdEyeSearch is loading")
-	updateDB()
+	if arg[1] ~= "x" then
+		updateDB()
+	end
 	extractDBtoPageFormat()
 	setWidth()
 	title()
