@@ -1,2 +1,2 @@
 # ThirdEyeSearch
-The world's most powerful Google Dorking search engine
+A TUI search engine made specifically for Google dorking. 
